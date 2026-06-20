@@ -4,7 +4,7 @@ import * as path from "path";
 
 dotenv.config({ path: path.join(__dirname, "../../.env") });
 
-const user = process.env.EMAIL_USER || "snigdhasakkuri1102@gmail.com";
+const user = process.env.EMAIL_USER || "sakkurisnigdha@gmail.com";
 const pass = process.env.EMAIL_APP_PASSWORD || "isxobjpbfzqtittx";
 
 console.log("Using email user:", user);

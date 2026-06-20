@@ -76,10 +76,24 @@ router.post("/auth/send-otp", async (req: Request, res: Response) => {
     await emailService.sendOTPEmail(email, otp);
     return res.json({ message: `OTP sent to ${email}. Check your inbox.`, email });
   } catch (err: any) {
-    console.error("[OTP Email Error]", err.message);
-    return res.status(500).json({
-      error: "Failed to send OTP email. Please check server email configuration.",
-      details: err.message,
+    console.error("[OTP Email Error] Failed to send email via SMTP:", err.message);
+    console.log(`\n======================================================`);
+    console.log(`🔑 [LOCAL BYPASS] Verification OTP for ${email}: ${otp}`);
+    console.log(`======================================================\n`);
+    
+    // Check if running on Render (typically has RENDER=true or PORT/NODE_ENV setup)
+    const isRender = process.env.RENDER || process.env.NODE_ENV === "production";
+    if (isRender) {
+      return res.status(500).json({
+        error: "Failed to send OTP email. Please verify your Render environment settings (EMAIL_USER & EMAIL_APP_PASSWORD) or check Gmail security settings.",
+        details: err.message,
+      });
+    }
+
+    return res.json({
+      message: `[DEVELOPMENT MOCK] SMTP configuration failed. OTP printed to server console: ${otp}`,
+      email,
+      mockOtp: otp // exposes OTP directly on local frontend to unblock testing
     });
   }
 });

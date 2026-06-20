@@ -39,7 +39,7 @@ export class AIService {
           "Authorization": `Bearer ${GROQ_API_KEY}`
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-specdec", // high-quality fast reasoning model
+          model: "llama-3.3-70b-versatile", // high-quality fast reasoning model
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt }

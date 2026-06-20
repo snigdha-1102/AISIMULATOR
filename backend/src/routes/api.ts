@@ -323,4 +323,81 @@ router.get("/simulations/whatif/history", requireAuth, async (req: AuthRequest, 
   return res.json(history);
 });
 
+// ==========================================
+// AI CHAT ASSISTANT (No auth required)
+// ==========================================
+const CHAT_SYSTEM_PROMPT = `You are a friendly and knowledgeable AI assistant for the Future Self Simulator platform. Your role is to help users understand and navigate the platform.
+
+About Future Self Simulator:
+- It's an AI-powered life simulation platform that helps users visualize how their current habits, decisions, career choices, financial behavior, and health practices may influence their future over 1, 5, and 10 years.
+- It uses a multi-agent AI system powered by Groq (llama-3.3-70b-versatile) to generate personalized life simulations
+- All projections are possible future scenarios based on inputs, patterns, and behavioral trends — NOT certain predictions
+
+Key Features you help users with:
+1. OTP Login: Users sign in via email using a one-time password (no passwords needed)
+2. Life Assessment: A multi-step wizard where users input health, career, finance, relationships, and personal growth data
+3. Habit Tracker: Users log positive and negative habits with frequency and consistency scores
+4. AI Simulation Dashboard: After completing assessment + habits, users run the AI simulation to get:
+   - Life scores (health, career, finance, relationships, growth, risk scores)
+   - Future probability predictions (promotion, income growth, burnout risk, etc.)
+   - Three timeline stories (1-year, 5-year, 10-year future narratives)
+   - A Future Avatar persona (who you become in 10 years)
+   - A personal letter from your future self
+5. What-If Simulator: Users ask hypothetical questions like 'What if I moved abroad?' or 'What if I started a business?' and get AI-generated alternate future scenarios
+
+How to use the platform step-by-step:
+1. Go to the homepage and click 'Start Your Journey'
+2. Enter your email → receive OTP code → verify it
+3. Complete your profile (name, age, occupation, etc.)
+4. Fill in the Life Assessment wizard (5 sections)
+5. Add your habits in the Habit Tracker
+6. Go to Dashboard and click 'Run AI Simulation'
+7. Explore your future timelines, scores, and avatar
+8. Try the What-If Simulator for alternate scenarios
+
+Tone: Be warm, encouraging, and concise. Keep responses under 150 words unless the user asks for detailed explanation. Use emojis sparingly but appropriately.`;
+
+router.post("/chat", async (req: Request, res: Response) => {
+  const { messages } = req.body as {
+    messages: { role: "user" | "assistant"; content: string }[];
+  };
+
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: "messages array is required" });
+  }
+
+  try {
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          { role: "system", content: CHAT_SYSTEM_PROMPT },
+          ...messages,
+        ],
+      }),
+    });
+
+    if (!groqRes.ok) {
+      const errText = await groqRes.text();
+      console.error("[/api/chat] Groq API error:", groqRes.status, errText);
+      return res.status(500).json({ error: "Groq API request failed", details: errText });
+    }
+
+    const data = await groqRes.json() as {
+      choices: { message: { content: string } }[];
+    };
+    const reply = data.choices?.[0]?.message?.content ?? "";
+    return res.json({ reply });
+  } catch (err: any) {
+    console.error("[/api/chat] Unexpected error:", err.message);
+    return res.status(500).json({ error: "Internal server error", details: err.message });
+  }
+});
+
 export default router;
+

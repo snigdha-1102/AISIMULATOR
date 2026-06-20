@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "../services/api";
-import { Sparkles, BarChart2, Activity, HelpCircle, LogOut, ChevronRight } from "lucide-react";
+import { Sparkles, BarChart2, Activity, HelpCircle, LogOut, ChevronRight, Download } from "lucide-react";
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -34,6 +34,12 @@ export const Navbar: React.FC = () => {
     api.signOut();
     setIsAuthenticated(false);
     router.push("/");
+  };
+
+  const triggerInstallPrompt = () => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("open-pwa-install-guide"));
+    }
   };
 
   // Hide nav items on auth pages
@@ -99,6 +105,15 @@ export const Navbar: React.FC = () => {
 
           {/* User Section / Sign Out */}
           <div className="flex items-center gap-4">
+            {/* Install PWA Button */}
+            <button
+              onClick={triggerInstallPrompt}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-500/30 text-indigo-400 text-xs font-semibold bg-indigo-500/5 hover:bg-indigo-500/10 hover:border-indigo-500/50 transition-all outline-none"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Install App</span>
+            </button>
+
             {isAuthenticated ? (
               <div className="flex items-center gap-3">
                 <span className="hidden sm:inline text-xs text-gray-400 font-medium">

@@ -14,16 +14,11 @@ export const PWAInstallPrompt: React.FC = () => {
   useEffect(() => {
     setMounted(true);
 
-    // Check if already in standalone (installed) mode
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (navigator as any).standalone === true;
-
-    if (isStandalone) return;
-
     // Check if dismissed in this session
     const dismissed = sessionStorage.getItem("pwa-prompt-dismissed") === "true";
-    if (dismissed) return;
+    if (!dismissed) {
+      setShowPrompt(true);
+    }
 
     // Detect iOS
     const ios =
@@ -37,15 +32,17 @@ export const PWAInstallPrompt: React.FC = () => {
       setShowPrompt(true);
     };
 
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    // Custom event to programmatically open the installation guide from other components (like Navbar)
+    const handleOpenGuide = () => {
+      setIsOpen(true);
+    };
 
-    // If iOS (Safari doesn't support beforeinstallprompt but is installable)
-    if (ios) {
-      setShowPrompt(true);
-    }
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("open-pwa-install-guide", handleOpenGuide);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("open-pwa-install-guide", handleOpenGuide);
     };
   }, []);
 
@@ -74,58 +71,60 @@ export const PWAInstallPrompt: React.FC = () => {
     sessionStorage.setItem("pwa-prompt-dismissed", "true");
   };
 
-  if (!mounted || !showPrompt || isDismissed) return null;
+  if (!mounted) return null;
 
   return (
     <>
       {/* Floating Prompt Banner (Bottom-Left) */}
-      <div
-        className="fixed bottom-6 left-6 z-40 max-w-sm w-[calc(100vw-32px)] sm:w-80 rounded-2xl border border-white/10 p-4 transition-all duration-300 animate-fade-in shadow-2xl"
-        style={{
-          background: "rgba(10, 11, 22, 0.95)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.15) inset",
-        }}
-      >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/25">
-              <Download className="w-4 h-4 text-white" />
+      {showPrompt && !isDismissed && (
+        <div
+          className="fixed bottom-6 left-6 z-40 max-w-sm w-[calc(100vw-32px)] sm:w-80 rounded-2xl border border-white/10 p-4 transition-all duration-300 animate-fade-in shadow-2xl"
+          style={{
+            background: "rgba(10, 11, 22, 0.95)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.15) inset",
+          }}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/25">
+                <Download className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h4 className="text-white text-xs font-bold tracking-wide">
+                  GET THE MOBILE APP
+                </h4>
+                <p className="text-gray-400 text-[11px] leading-relaxed mt-0.5">
+                  Install Future Self Simulator on your phone for offline tracking & seamless access!
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-white text-xs font-bold tracking-wide">
-                GET THE MOBILE APP
-              </h4>
-              <p className="text-gray-400 text-[11px] leading-relaxed mt-0.5">
-                Install Future Self Simulator on your phone for offline tracking & seamless access!
-              </p>
-            </div>
+            <button
+              onClick={handleDismiss}
+              className="text-gray-500 hover:text-white p-0.5 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            onClick={handleDismiss}
-            className="text-gray-500 hover:text-white p-0.5 rounded-lg hover:bg-white/5 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
 
-        <div className="mt-3 flex gap-2">
-          <button
-            onClick={handleInstallClick}
-            className="flex-grow flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 active:scale-95"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Install App</span>
-          </button>
-          <button
-            onClick={() => setIsOpen(true)}
-            className="px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/20 text-gray-300 text-xs font-semibold hover:bg-white/5 transition-all"
-          >
-            Guide
-          </button>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={handleInstallClick}
+              className="flex-grow flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Install App</span>
+            </button>
+            <button
+              onClick={() => setIsOpen(true)}
+              className="px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/20 text-gray-300 text-xs font-semibold hover:bg-white/5 transition-all"
+            >
+              Guide
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* iOS Instructions & Installation Guide Modal */}
       {isOpen && (

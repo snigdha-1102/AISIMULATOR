@@ -108,10 +108,11 @@ export const Navbar: React.FC = () => {
             {/* Install PWA Button */}
             <button
               onClick={triggerInstallPrompt}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-500/30 text-indigo-400 text-xs font-semibold bg-indigo-500/5 hover:bg-indigo-500/10 hover:border-indigo-500/50 transition-all outline-none"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 rounded-lg border border-indigo-500/30 text-indigo-400 text-xs font-semibold bg-indigo-500/5 hover:bg-indigo-500/10 hover:border-indigo-500/50 transition-all outline-none"
+              title="Install App"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Install App</span>
+              <span className="hidden sm:inline">Install App</span>
             </button>
 
             {isAuthenticated ? (
